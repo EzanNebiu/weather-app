@@ -1,4 +1,4 @@
-# WeatherApp v2 ☀️🌍
+# WeatherApp ☀️🌍
 
 A premium weather application featuring a stunning HD 3D Earth visualization, real-time weather data, and a beautiful glassmorphism design. Built with modern web technologies and production-ready architecture.
 
