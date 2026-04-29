@@ -23,25 +23,25 @@ export const getHourBasedGradient = (hour: number): string => {
   
   // Early Morning: 8-9 (Soft blue, light pink)
   if (hour === 8) {
-    return 'from-sky-300 via-blue-200 to-cyan-200';
+    return 'from-sky-300 via-blue-400 to-cyan-400';
   }
   if (hour === 9) {
-    return 'from-blue-200 via-cyan-100 to-blue-50';
+    return 'from-blue-200 via-cyan-200 to-blue-100';
   }
   
   // Mid Morning to Noon: 10-12 (Bright blue, clear sky)
   if (hour >= 10 && hour <= 12) {
-    return 'from-sky-400 via-blue-300 to-cyan-200';
+    return 'from-sky-400 via-blue-600 to-cyan-400';
   }
   
   // Afternoon: 13-16 (Bright, vivid blue)
   if (hour >= 13 && hour <= 16) {
-    return 'from-sky-300 via-blue-200 to-cyan-100';
+    return 'from-sky-300 via-blue-400 to-cyan-200';
   }
   
   // Late Afternoon: 17 (Starting to warm)
   if (hour === 17) {
-    return 'from-sky-300 via-blue-300 to-orange-100';
+    return 'from-sky-300 via-blue-600 to-orange-200';
   }
   
   // Sunset Start: 18 (Orange, yellow, pink)

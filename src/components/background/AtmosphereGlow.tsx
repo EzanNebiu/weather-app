@@ -26,7 +26,7 @@ export const AtmosphereGlow = () => {
       <meshBasicMaterial
         color={new Color(ATMOSPHERE_COLOR)}
         transparent={true}
-        opacity={0.15}
+        opacity={0.2}
         side={BackSide}
       />
     </mesh>

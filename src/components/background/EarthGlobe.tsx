@@ -11,10 +11,9 @@ import { latLonToVector3, getSunPosition } from '../../utils/geo';
 interface EarthGlobeProps {
   latitude: number;
   longitude: number;
-  isHomePage: boolean;
 }
 
-export const EarthGlobe = ({ latitude, longitude, isHomePage }: EarthGlobeProps) => {
+export const EarthGlobe = ({ latitude, longitude }: EarthGlobeProps) => {
   const earthRef = useRef<Mesh>(null);
   const markerGroupRef = useRef<Group>(null);
   const markerCoreRef = useRef<Mesh>(null);

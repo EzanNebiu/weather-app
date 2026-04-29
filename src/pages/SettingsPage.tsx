@@ -284,7 +284,7 @@ export const SettingsPage = () => {
             {/* Info */}
             <GlassCard>
               <div className="text-center text-white/60 text-sm py-4">
-                <p>WeatherApp v2</p>
+                <p>WeatherApp</p>
                 <p className="mt-1">Premium HD 3D Earth Edition</p>
               </div>
             </GlassCard>
