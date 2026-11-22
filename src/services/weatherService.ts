@@ -15,6 +15,7 @@ interface WeatherAPIResponse {
     lat: number;
     lon: number;
     localtime: string;
+    localtime_epoch: number;
   };
   current: {
     temp_c: number;
@@ -46,6 +47,32 @@ interface WeatherAPIResponse {
   };
 }
 
+// statusText is empty over HTTP/2, so prefer the API's own error message
+const getApiErrorMessage = async (response: Response): Promise<string> => {
+  try {
+    const body = await response.json();
+    if (body?.error?.message) return `Weather API error: ${body.error.message}`;
+  } catch {
+    // not JSON
+  }
+  return `Weather API error: ${response.status} ${response.statusText}`.trim();
+};
+
+// Parse 'yyyy-MM-dd' / 'yyyy-MM-dd HH:mm' from WeatherAPI as wall-clock time (not UTC)
+const parseLocalDateTime = (value: string): Date => {
+  const [datePart, timePart = '00:00'] = value.split(' ');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm] = timePart.split(':').map(Number);
+  return new Date(y, m - 1, d, hh, mm);
+};
+
+// Minutes from UTC at the location: its wall-clock time read as UTC, minus the real instant
+const getTimezoneOffsetMinutes = (localtime: string, localtimeEpoch: number): number => {
+  const t = parseLocalDateTime(localtime);
+  const wallClockAsUtc = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate(), t.getHours(), t.getMinutes());
+  return Math.round((wallClockAsUtc - localtimeEpoch * 1000) / 60000 / 15) * 15;
+};
+
 export const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherData> => {
   try {
     const response = await fetch(
@@ -53,7 +80,7 @@ export const fetchWeatherData = async (lat: number, lon: number): Promise<Weathe
     );
 
     if (!response.ok) {
-      throw new Error(`Weather API error: ${response.statusText}`);
+      throw new Error(await getApiErrorMessage(response));
     }
 
     const data: WeatherAPIResponse = await response.json();
@@ -67,11 +94,11 @@ export const fetchWeatherData = async (lat: number, lon: number): Promise<Weathe
 export const fetchWeatherByCity = async (city: string): Promise<WeatherData> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/forecast.json?key=${API_KEY}&q=${city}&days=7&aqi=no&alerts=no`
+      `${BASE_URL}/forecast.json?key=${API_KEY}&q=${encodeURIComponent(city)}&days=7&aqi=no&alerts=no`
     );
 
     if (!response.ok) {
-      throw new Error(`Weather API error: ${response.statusText}`);
+      throw new Error(await getApiErrorMessage(response));
     }
 
     const data: WeatherAPIResponse = await response.json();
@@ -88,17 +115,18 @@ const transformApiData = (data: WeatherAPIResponse): WeatherData => {
     country: data.location.country,
     latitude: data.location.lat,
     longitude: data.location.lon,
+    timezoneOffset: getTimezoneOffsetMinutes(data.location.localtime, data.location.localtime_epoch),
   };
 
   const currentWeather: CurrentWeather = {
     temperature: data.current.temp_c,
     condition: data.current.condition.text,
     icon: data.current.condition.icon,
-    timeOfDay: getTimeOfDay(new Date(data.location.localtime)),
+    timeOfDay: getTimeOfDay(parseLocalDateTime(data.location.localtime)),
   };
 
   // Get next 5 hours from today's forecast
-  const now = new Date(data.location.localtime);
+  const now = parseLocalDateTime(data.location.localtime);
   const currentHour = now.getHours();
   const todayForecast = data.forecast.forecastday[0];
   const tomorrowForecast = data.forecast.forecastday[1];
@@ -109,18 +137,15 @@ const transformApiData = (data: WeatherAPIResponse): WeatherData => {
   ];
 
   const hourly: HourlyForecast[] = allHours.slice(0, 5).map((hour) => ({
-    hour: new Date(hour.time).toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    }),
+    // WeatherAPI gives 'yyyy-MM-dd HH:mm' in the location's own time
+    hour: hour.time.split(' ')[1],
     temperature: hour.temp_c,
     condition: hour.condition.text,
     icon: hour.condition.icon,
   }));
 
   const daily: DailyForecast[] = data.forecast.forecastday.map((day, index) => {
-    const date = new Date(day.date);
+    const date = parseLocalDateTime(day.date);
     return {
       day: index === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'long' }),
       date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),

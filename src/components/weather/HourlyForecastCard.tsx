@@ -1,5 +1,5 @@
 import { HourlyForecast } from '../../types/weather';
-import { formatTemperature, getWeatherEmoji } from '../../utils/weather';
+import { formatHour, formatTemperature, getWeatherEmoji } from '../../utils/weather';
 import { GlassCard } from '../common/GlassCard';
 
 interface HourlyForecastCardProps {
@@ -13,7 +13,7 @@ export const HourlyForecastCard = ({ forecast }: HourlyForecastCardProps) => {
       className="min-w-[100px] flex-shrink-0 text-center hover:bg-white/15 transition-colors"
     >
       <p className="text-sm font-medium text-white/80 mb-2">
-        {forecast.hour}
+        {formatHour(forecast.hour)}
       </p>
       <div className="text-3xl mb-2">
         {getWeatherEmoji(forecast.condition)}

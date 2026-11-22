@@ -1,3 +1,5 @@
+import { loadSettings } from './settings';
+
 /**
  * Get time-based gradient colors based on actual hour (0-23)
  * Creates realistic sky colors throughout the day
@@ -121,10 +123,11 @@ export const getWeatherEmoji = (condition: string): string => {
   const lowerCondition = condition.toLowerCase();
   
   if (lowerCondition.includes('sunny') || lowerCondition.includes('clear')) return '☀️';
-  if (lowerCondition.includes('cloud')) return '☁️';
-  if (lowerCondition.includes('rain')) return '🌧️';
-  if (lowerCondition.includes('snow')) return '❄️';
+  // Check thunder before rain/cloud: "Patchy light rain with thunder" etc.
   if (lowerCondition.includes('thunder') || lowerCondition.includes('storm')) return '⛈️';
+  if (lowerCondition.includes('snow') || lowerCondition.includes('sleet') || lowerCondition.includes('blizzard') || lowerCondition.includes('ice')) return '❄️';
+  if (lowerCondition.includes('rain') || lowerCondition.includes('drizzle') || lowerCondition.includes('shower')) return '🌧️';
+  if (lowerCondition.includes('cloud') || lowerCondition.includes('overcast')) return '☁️';
   if (lowerCondition.includes('fog') || lowerCondition.includes('mist')) return '🌫️';
   
   return '🌤️';
@@ -133,6 +136,19 @@ export const getWeatherEmoji = (condition: string): string => {
 /**
  * Format temperature with degree symbol
  */
-export const formatTemperature = (temp: number): string => {
-  return `${Math.round(temp)}°`;
+export const formatTemperature = (tempCelsius: number): string => {
+  const { temperatureUnit } = loadSettings();
+  const value = temperatureUnit === 'fahrenheit' ? tempCelsius * 9 / 5 + 32 : tempCelsius;
+  return `${Math.round(value)}°`;
+};
+
+/**
+ * Format an 'HH:mm' string according to the 12/24h setting
+ */
+export const formatHour = (hhmm: string): string => {
+  if (loadSettings().use24HourFormat) return hhmm;
+  const [h, m] = hhmm.split(':').map(Number);
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return m ? `${hour12}:${String(m).padStart(2, '0')} ${suffix}` : `${hour12} ${suffix}`;
 };

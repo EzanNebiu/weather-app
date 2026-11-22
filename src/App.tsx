@@ -19,8 +19,8 @@ function App() {
   }
 
   // If there's a geolocation error, use mock data location as fallback
-  const initialLat = latitude || mockWeatherData.location.latitude;
-  const initialLon = longitude || mockWeatherData.location.longitude;
+  const initialLat = latitude ?? mockWeatherData.location.latitude;
+  const initialLon = longitude ?? mockWeatherData.location.longitude;
 
   if (geoError) {
     console.warn('Geolocation error:', geoError);

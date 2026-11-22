@@ -8,32 +8,17 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
-type TemperatureUnit = 'celsius' | 'fahrenheit';
-type WindSpeedUnit = 'kmh' | 'mph' | 'ms';
-type PressureUnit = 'hpa' | 'inhg' | 'mb';
-type DistanceUnit = 'km' | 'mi';
-
-interface Settings {
-  temperatureUnit: TemperatureUnit;
-  windSpeedUnit: WindSpeedUnit;
-  pressureUnit: PressureUnit;
-  distanceUnit: DistanceUnit;
-  use24HourFormat: boolean;
-  notifications: boolean;
-}
+import { loadSettings, saveSettings, type Settings } from '../utils/settings';
 
 export const SettingsPage = () => {
-  const [settings, setSettings] = useState<Settings>({
-    temperatureUnit: 'celsius',
-    windSpeedUnit: 'kmh',
-    pressureUnit: 'hpa',
-    distanceUnit: 'km',
-    use24HourFormat: true,
-    notifications: true,
-  });
+  const [settings, setSettings] = useState<Settings>(loadSettings);
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings(prev => {
+      const next = { ...prev, [key]: value };
+      saveSettings(next);
+      return next;
+    });
   };
 
   return (

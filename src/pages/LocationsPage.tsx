@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { loadSavedLocations, saveSavedLocations, type SavedLocation } from '../utils/savedLocations';
+import { formatCoordinates } from '../utils/location';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/common/GlassCard';
 import { Footer } from '../components/layout/Footer';
@@ -8,55 +10,18 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 
-interface SavedLocation {
-  id: string;
-  name: string;
-  country: string;
-  latitude: number;
-  longitude: number;
-  temperature: number;
-  condition: string;
-  isFavorite: boolean;
-}
-
 interface LocationsPageProps {
   onLocationSelect: (lat: number, lon: number) => void;
 }
 
 export const LocationsPage = ({ onLocationSelect }: LocationsPageProps) => {
   const navigate = useNavigate();
-  const [locations, setLocations] = useState<SavedLocation[]>([
-    {
-      id: '1',
-      name: 'New York',
-      country: 'United States',
-      latitude: 40.7128,
-      longitude: -74.0060,
-      temperature: 72,
-      condition: 'Partly Cloudy',
-      isFavorite: true,
-    },
-    {
-      id: '2',
-      name: 'London',
-      country: 'United Kingdom',
-      latitude: 51.5074,
-      longitude: -0.1278,
-      temperature: 61,
-      condition: 'Rainy',
-      isFavorite: false,
-    },
-    {
-      id: '3',
-      name: 'Tokyo',
-      country: 'Japan',
-      latitude: 35.6762,
-      longitude: 139.6503,
-      temperature: 68,
-      condition: 'Clear',
-      isFavorite: false,
-    },
-  ]);
+  const [locations, setLocationsState] = useState<SavedLocation[]>(loadSavedLocations);
+
+  const setLocations = (next: SavedLocation[]) => {
+    setLocationsState(next);
+    saveSavedLocations(next);
+  };
 
   const toggleFavorite = (id: string) => {
     setLocations(locations.map(loc => 
@@ -178,11 +143,8 @@ export const LocationsPage = ({ onLocationSelect }: LocationsPageProps) => {
                           className="text-right cursor-pointer"
                           onClick={() => handleSelectLocation(location)}
                         >
-                          <p className="text-white font-bold text-xl">
-                            {location.temperature}°
-                          </p>
                           <p className="text-white/60 text-xs">
-                            {location.condition}
+                            {formatCoordinates(location.latitude, location.longitude)}
                           </p>
                         </div>
 
@@ -193,6 +155,7 @@ export const LocationsPage = ({ onLocationSelect }: LocationsPageProps) => {
                               e.stopPropagation();
                               toggleFavorite(location.id);
                             }}
+                            aria-label={location.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                             className="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
                           >
                             {location.isFavorite ? (
@@ -206,6 +169,7 @@ export const LocationsPage = ({ onLocationSelect }: LocationsPageProps) => {
                               e.stopPropagation();
                               removeLocation(location.id);
                             }}
+                            aria-label={`Remove ${location.name}`}
                             className="w-9 h-9 rounded-lg bg-white/5 hover:bg-red-500/20 flex items-center justify-center transition-colors group"
                           >
                             <DeleteIcon className="text-white/60 group-hover:text-red-400" fontSize="small" />

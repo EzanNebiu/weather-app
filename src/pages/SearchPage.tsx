@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { addSavedLocation } from '../utils/savedLocations';
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '../components/common/GlassCard';
 import { Footer } from '../components/layout/Footer';
@@ -23,6 +24,12 @@ export const SearchPage = ({ onLocationSelect }: SearchPageProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestRequest = useRef(0);
+
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  }, []);
 
   const handleSearch = async (query: string) => {
     if (query.length < 2) {
@@ -30,21 +37,21 @@ export const SearchPage = ({ onLocationSelect }: SearchPageProps) => {
       return;
     }
 
+    const requestId = ++latestRequest.current;
     setIsSearching(true);
-    
+
     try {
-      // Use OpenStreetMap Nominatim API for geocoding (free, no API key needed)
+      // Use OpenStreetMap Nominatim API for geocoding (free, no API key needed).
+      // Browsers ignore attempts to set User-Agent, so just ask for English place names.
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=10&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'WeatherApp/2.0'
-          }
-        }
+        { headers: { 'Accept-Language': 'en' } }
       );
-      
+      if (!response.ok) throw new Error(`Geocoding failed: ${response.status}`);
+
       const data = await response.json();
-      
+      if (requestId !== latestRequest.current) return; // a newer search has started
+
       const results: SearchResult[] = data.map((item: any) => ({
         id: item.place_id.toString(),
         name: item.address?.city || item.address?.town || item.address?.village || item.name || 'Unknown',
@@ -53,9 +60,10 @@ export const SearchPage = ({ onLocationSelect }: SearchPageProps) => {
         latitude: parseFloat(item.lat),
         longitude: parseFloat(item.lon),
       }));
-      
+
       setSearchResults(results);
     } catch (error) {
+      if (requestId !== latestRequest.current) return;
       console.error('Search error:', error);
       // Fallback to mock data if API fails
       const mockResults: SearchResult[] = [
@@ -65,28 +73,41 @@ export const SearchPage = ({ onLocationSelect }: SearchPageProps) => {
         { id: '4', name: 'Paris', country: 'France', region: 'Île-de-France', latitude: 48.8566, longitude: 2.3522 },
         { id: '5', name: 'Sydney', country: 'Australia', region: 'New South Wales', latitude: -33.8688, longitude: 151.2093 },
         { id: '6', name: 'Prizren', country: 'Kosovo', latitude: 42.2139, longitude: 20.7397 },
-      ].filter(result => 
+      ].filter(result =>
         result.name.toLowerCase().includes(query.toLowerCase()) ||
         result.country.toLowerCase().includes(query.toLowerCase())
       );
       setSearchResults(mockResults);
     } finally {
-      setIsSearching(false);
+      if (requestId === latestRequest.current) setIsSearching(false);
     }
   };
 
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
-    // Debounce the search
-    const timeoutId = setTimeout(() => {
-      handleSearch(value);
-    }, 300);
-    
-    return () => clearTimeout(timeoutId);
+    // Debounce: only search once the user pauses typing
+    // (the old version fired a request on every keystroke and could show stale results)
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) {
+      latestRequest.current++;
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      handleSearch(value.trim());
+    }, 400);
   };
 
   const handleSelectLocation = (result: SearchResult) => {
-    console.log('Selected location:', result);
+    // Remember it on the Locations page
+    addSavedLocation({
+      id: result.id,
+      name: result.name,
+      country: result.country,
+      latitude: result.latitude,
+      longitude: result.longitude,
+    });
     // Update the location in the app
     onLocationSelect(result.latitude, result.longitude);
     // Navigate to home page to show the weather
