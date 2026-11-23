@@ -2,6 +2,10 @@
 
 A premium weather application featuring a stunning HD 3D Earth visualization, real-time weather data, and a beautiful glassmorphism design. Built with modern web technologies and production-ready architecture.
 
+**Live demo:** https://weather-app.ezannebija.dev
+
+![WeatherApp screenshot](docs/screenshot.webp)
+
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-100%25-3178c6?logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite)
@@ -10,7 +14,7 @@ A premium weather application featuring a stunning HD 3D Earth visualization, re
 ## ✨ Features
 
 ### 🌐 HD 3D Earth Visualization
-- **Realistic Earth Globe** with NASA HD textures (2048x1024 resolution)
+- **Realistic Earth Globe** with HD 2048px Earth textures
 - **Normal Mapping** for terrain depth and detail
 - **Specular Mapping** for ocean reflection and shine
 - **Atmospheric Glow** with Fresnel-style effect
@@ -76,7 +80,7 @@ A premium weather application featuring a stunning HD 3D Earth visualization, re
 
 ### Data & APIs
 - **OpenStreetMap Nominatim** - Geocoding and location search
-- **Weather API Integration Ready** - structured for real API connections
+- **WeatherAPI.com** - live current conditions, hourly and 7-day forecasts
 
 ## 📂 Project Structure
 
@@ -188,7 +192,7 @@ Real-time sun positioning based on UTC time:
 ### Gradient System
 24 unique hourly gradients matching local time:
 - Each hour (0-23) has custom gradient
-- Local hour calculated from longitude (15° = 1 hour)
+- Local hour calculated from the location's UTC offset (falls back to longitude, 15° = 1 hour)
 - Smooth 1-second transitions between colors
 - Examples:
   - 6 AM: Orange sunrise
@@ -250,10 +254,12 @@ export const EARTH_CONSTANTS = {
 ```
 
 ### Weather Data
-Mock data in `src/data/mockWeatherData.ts`
-- Easily replaceable with real API
-- Structured for API integration
-- Type-safe interfaces
+Live data comes from [WeatherAPI.com](https://www.weatherapi.com/) (`src/services/weatherService.ts`).
+Set your own key in a `.env` file:
+```env
+VITE_WEATHER_API_KEY=your_key_here
+```
+`src/data/mockWeatherData.ts` holds typed sample data for development.
 
 ## 🌐 Browser Support
 
@@ -265,7 +271,7 @@ Mock data in `src/data/mockWeatherData.ts`
 
 ## 📄 License
 
-**ISC License**
+**ISC License**, see [LICENSE](LICENSE).
 
 ## 👨‍💻 Author
 
@@ -275,7 +281,8 @@ A full-stack developer passionate about creating modern, premium web experiences
 
 ### Connect
 - 📧 Email: [ezannebiu8@gmail.com](mailto:ezannebiu8@gmail.com)
-- 💼 LinkedIn: [Ezan Nebiu](https://www.linkedin.com/in/ezan-nebiu-2b0966311)
+- 💼 LinkedIn: [Ezan M. Nebija](https://www.linkedin.com/in/ezan-nebija)
+- 🌐 Portfolio: [ezannebija.dev](https://ezannebija.dev)
 - 🐙 GitHub: [EzanNebiu](https://github.com/EzanNebiu)
 
 ---
